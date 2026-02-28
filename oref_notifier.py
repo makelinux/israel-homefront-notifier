@@ -5,6 +5,8 @@ import json
 import logging
 import os
 import subprocess
+import sys
+import time
 from urllib.parse import quote
 from urllib.request import Request, urlopen
 
@@ -83,3 +85,57 @@ def send_notification(alert: dict) -> None:
         f'sound name "default"'
     )
     subprocess.run(["osascript", "-e", script], check=False)
+
+
+def seed_seen_alerts(alerts: list[dict]) -> set[int]:
+    """Mark all current alerts as seen without notifying (first-run behavior)."""
+    return {a["rid"] for a in alerts}
+
+
+def process_alerts(alerts: list[dict], seen: set[int]) -> set[int]:
+    """Check for new alerts, send notifications, return updated seen set."""
+    updated = set(seen)
+    for alert in alerts:
+        rid = alert["rid"]
+        if rid not in seen:
+            send_notification(alert)
+            updated.add(rid)
+    return updated
+
+
+def main() -> None:
+    """Main entry point -- polling loop."""
+    config_path = sys.argv[1] if len(sys.argv) > 1 else "config.json"
+    config = load_config(config_path)
+    cities = config["cities"]
+    lang = config.get("lang", "he")
+    interval = config.get("poll_interval_seconds", 5)
+    seen_path = os.path.expanduser("~/.oref-notifier/seen_alerts.json")
+
+    logging.basicConfig(
+        level=logging.INFO,
+        format="%(asctime)s %(levelname)s %(message)s",
+    )
+
+    seen = load_seen_alerts(seen_path)
+    first_run = len(seen) == 0
+
+    if first_run:
+        logger.info("First run -- seeding seen alerts")
+        alerts = fetch_alerts(cities, lang)
+        seen = seed_seen_alerts(alerts)
+        save_seen_alerts(seen_path, seen)
+        logger.info("Seeded %d alerts", len(seen))
+
+    logger.info("Polling every %ds for cities: %s", interval, ", ".join(cities))
+
+    while True:
+        alerts = fetch_alerts(cities, lang)
+        if alerts:
+            seen = process_alerts(alerts, seen)
+            save_seen_alerts(seen_path, seen)
+        time.sleep(interval)
+
+
+if __name__ == "__main__":
+    main()

@@ -3,10 +3,12 @@
 
 import json
 import logging
+import os
 from urllib.parse import quote
 from urllib.request import Request, urlopen
 
 BASE_URL = "https://alerts-history.oref.org.il//Shared/Ajax/GetAlarmsHistory.aspx"
+SEEN_ALERTS_PATH = os.path.expanduser("~/.oref-notifier/seen_alerts.json")
 
 logger = logging.getLogger("oref_notifier")
 
@@ -37,3 +39,19 @@ def fetch_alerts(cities: list[str], lang: str) -> list[dict]:
     except Exception:
         logger.warning("Failed to fetch alerts", exc_info=True)
         return []
+
+
+def load_seen_alerts(path: str) -> set[int]:
+    """Load seen alert IDs from disk. Returns empty set if file missing."""
+    try:
+        with open(path, "r") as f:
+            return set(json.load(f))
+    except (FileNotFoundError, json.JSONDecodeError):
+        return set()
+
+
+def save_seen_alerts(path: str, seen: set[int]) -> None:
+    """Save seen alert IDs to disk."""
+    os.makedirs(os.path.dirname(path), exist_ok=True)
+    with open(path, "w") as f:
+        json.dump(sorted(seen), f)

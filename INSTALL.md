@@ -28,7 +28,7 @@
 
 3. Test manually:
    ```bash
-   python3 oref_notifier.py
+   python3 israel_homefront_notifier.py
    ```
 
 ## Install as a launchd service

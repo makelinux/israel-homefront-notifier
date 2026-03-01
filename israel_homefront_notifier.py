@@ -15,7 +15,7 @@ from urllib.request import Request, urlopen
 BASE_URL = "https://alerts-history.oref.org.il//Shared/Ajax/GetAlarmsHistory.aspx"
 SEEN_ALERTS_PATH = os.path.expanduser("~/.oref-notifier/seen_alerts.json")
 
-logger = logging.getLogger("oref_notifier")
+logger = logging.getLogger("israel_homefront_notifier")
 
 
 def _is_hebrew(text: str) -> bool:

@@ -5,9 +5,9 @@ from unittest.mock import patch, MagicMock, call
 class TestProcessAlerts(unittest.TestCase):
     """Test the process_alerts function that checks for new alerts."""
 
-    @patch("oref_notifier.send_notification")
+    @patch("israel_homefront_notifier.send_notification")
     def test_new_alert_triggers_notification(self, mock_notify):
-        from oref_notifier import process_alerts
+        from israel_homefront_notifier import process_alerts
 
         alerts = [
             {"rid": 100, "category": 1, "category_desc": "rockets",
@@ -18,9 +18,9 @@ class TestProcessAlerts(unittest.TestCase):
         mock_notify.assert_called_once_with(alerts[0])
         self.assertIn(100, new_seen)
 
-    @patch("oref_notifier.send_notification")
+    @patch("israel_homefront_notifier.send_notification")
     def test_already_seen_alert_skipped(self, mock_notify):
-        from oref_notifier import process_alerts
+        from israel_homefront_notifier import process_alerts
 
         alerts = [
             {"rid": 100, "category": 1, "category_desc": "rockets",
@@ -31,9 +31,9 @@ class TestProcessAlerts(unittest.TestCase):
         mock_notify.assert_not_called()
         self.assertIn(100, new_seen)
 
-    @patch("oref_notifier.send_notification")
+    @patch("israel_homefront_notifier.send_notification")
     def test_mixed_new_and_seen(self, mock_notify):
-        from oref_notifier import process_alerts
+        from israel_homefront_notifier import process_alerts
 
         alerts = [
             {"rid": 100, "category": 1, "category_desc": "a",
@@ -50,9 +50,9 @@ class TestProcessAlerts(unittest.TestCase):
 class TestSeedOnFirstRun(unittest.TestCase):
     """On first run, all current alerts are marked seen without notifying."""
 
-    @patch("oref_notifier.send_notification")
+    @patch("israel_homefront_notifier.send_notification")
     def test_seed_marks_all_seen_no_notify(self, mock_notify):
-        from oref_notifier import seed_seen_alerts
+        from israel_homefront_notifier import seed_seen_alerts
 
         alerts = [
             {"rid": 1, "category": 1, "category_desc": "a",

@@ -10,9 +10,9 @@ CATEGORY_TITLES = {
 
 
 class TestNotify(unittest.TestCase):
-    @patch("oref_notifier.subprocess.run")
+    @patch("israel_homefront_notifier.subprocess.run")
     def test_sends_osascript_notification(self, mock_run):
-        from oref_notifier import send_notification
+        from israel_homefront_notifier import send_notification
 
         alert = {
             "category": 1,
@@ -31,9 +31,9 @@ class TestNotify(unittest.TestCase):
         self.assertIn("נתניה - מזרח", script)
         self.assertIn("18:45", script)
 
-    @patch("oref_notifier.subprocess.run")
+    @patch("israel_homefront_notifier.subprocess.run")
     def test_uses_category_title(self, mock_run):
-        from oref_notifier import send_notification
+        from israel_homefront_notifier import send_notification
 
         alert = {
             "category": 14,
@@ -45,9 +45,9 @@ class TestNotify(unittest.TestCase):
         script = mock_run.call_args[0][0][2]
         self.assertIn("התרעות צפויות", script)
 
-    @patch("oref_notifier.subprocess.run")
+    @patch("israel_homefront_notifier.subprocess.run")
     def test_unknown_category_uses_desc(self, mock_run):
-        from oref_notifier import send_notification
+        from israel_homefront_notifier import send_notification
 
         alert = {
             "category": 99,

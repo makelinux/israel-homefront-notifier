@@ -5,7 +5,7 @@ from unittest.mock import patch, MagicMock
 
 class TestBuildUrl(unittest.TestCase):
     def test_single_city(self):
-        from oref_notifier import build_url
+        from israel_homefront_notifier import build_url
 
         url = build_url(["נתניה - מזרח"], "he")
         self.assertIn("lang=he", url)
@@ -13,7 +13,7 @@ class TestBuildUrl(unittest.TestCase):
         self.assertIn("city_0=", url)
 
     def test_multiple_cities(self):
-        from oref_notifier import build_url
+        from israel_homefront_notifier import build_url
 
         url = build_url(["נתניה - מזרח", "תל אביב"], "he")
         self.assertIn("city_0=", url)
@@ -21,9 +21,9 @@ class TestBuildUrl(unittest.TestCase):
 
 
 class TestFetchAlerts(unittest.TestCase):
-    @patch("oref_notifier.urlopen")
+    @patch("israel_homefront_notifier.urlopen")
     def test_parses_json_response(self, mock_urlopen):
-        from oref_notifier import fetch_alerts
+        from israel_homefront_notifier import fetch_alerts
 
         alerts_data = [
             {
@@ -46,9 +46,9 @@ class TestFetchAlerts(unittest.TestCase):
         self.assertEqual(len(result), 1)
         self.assertEqual(result[0]["rid"], 12345)
 
-    @patch("oref_notifier.urlopen")
+    @patch("israel_homefront_notifier.urlopen")
     def test_returns_empty_on_network_error(self, mock_urlopen):
-        from oref_notifier import fetch_alerts
+        from israel_homefront_notifier import fetch_alerts
 
         mock_urlopen.side_effect = OSError("Connection refused")
 

@@ -6,7 +6,7 @@ import unittest
 
 class TestLoadConfig(unittest.TestCase):
     def test_loads_config_from_file(self):
-        from oref_notifier import load_config
+        from israel_homefront_notifier import load_config
 
         config_data = {
             "cities": ["נתניה - מזרח"],
@@ -26,7 +26,7 @@ class TestLoadConfig(unittest.TestCase):
         self.assertEqual(result["lang"], "he")
 
     def test_config_missing_file_raises(self):
-        from oref_notifier import load_config
+        from israel_homefront_notifier import load_config
 
         with self.assertRaises(FileNotFoundError):
             load_config("/nonexistent/config.json")
@@ -34,22 +34,22 @@ class TestLoadConfig(unittest.TestCase):
 
 class TestReverseHebrew(unittest.TestCase):
     def test_reverses_hebrew_string(self):
-        from oref_notifier import reverse_hebrew
+        from israel_homefront_notifier import reverse_hebrew
 
         self.assertEqual(reverse_hebrew("חרזמ - הינתנ"), "נתניה - מזרח")
 
     def test_leaves_non_hebrew_unchanged(self):
-        from oref_notifier import reverse_hebrew
+        from israel_homefront_notifier import reverse_hebrew
 
         self.assertEqual(reverse_hebrew("Netanya - East"), "Netanya - East")
 
     def test_reverses_hebrew_without_dash(self):
-        from oref_notifier import reverse_hebrew
+        from israel_homefront_notifier import reverse_hebrew
 
         self.assertEqual(reverse_hebrew("ביבא לת"), "תל אביב")
 
     def test_empty_string(self):
-        from oref_notifier import reverse_hebrew
+        from israel_homefront_notifier import reverse_hebrew
 
         self.assertEqual(reverse_hebrew(""), "")
 

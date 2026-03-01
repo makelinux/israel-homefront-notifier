@@ -28,7 +28,7 @@ cat > "$PLIST_PATH" << PLIST
     <key>ProgramArguments</key>
     <array>
         <string>${PYTHON}</string>
-        <string>${SCRIPT_DIR}/oref_notifier.py</string>
+        <string>${SCRIPT_DIR}/israel_homefront_notifier.py</string>
         <string>${SCRIPT_DIR}/config.json</string>
     </array>
     <key>WorkingDirectory</key>

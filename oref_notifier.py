@@ -8,6 +8,7 @@ import ssl
 import subprocess
 import sys
 import time
+import unicodedata
 from urllib.parse import quote
 from urllib.request import Request, urlopen
 
@@ -15,6 +16,18 @@ BASE_URL = "https://alerts-history.oref.org.il//Shared/Ajax/GetAlarmsHistory.asp
 SEEN_ALERTS_PATH = os.path.expanduser("~/.oref-notifier/seen_alerts.json")
 
 logger = logging.getLogger("oref_notifier")
+
+
+def _is_hebrew(text: str) -> bool:
+    """Check if text contains Hebrew characters."""
+    return any(unicodedata.name(c, "").startswith("HEBREW") for c in text)
+
+
+def reverse_hebrew(text: str) -> str:
+    """Reverse a Hebrew string. Non-Hebrew strings are returned unchanged."""
+    if not text or not _is_hebrew(text):
+        return text
+    return text[::-1]
 
 
 def load_config(path: str) -> dict:
@@ -27,7 +40,7 @@ def build_url(cities: list[str], lang: str) -> str:
     """Build the Oref API URL with city query parameters."""
     params = f"lang={lang}&mode=1"
     for i, city in enumerate(cities):
-        params += f"&city_{i}={quote(city)}"
+        params += f"&city_{i}={quote(reverse_hebrew(city))}"
     return f"{BASE_URL}?{params}"
 
 

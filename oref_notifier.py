@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Oref Notifier — Pikud HaOref alert monitor with macOS notifications."""
+"""israel-homefront-macos-notifier — Pikud HaOref alert monitor with macOS notifications."""
 
 import json
 import logging

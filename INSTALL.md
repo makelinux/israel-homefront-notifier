@@ -1,10 +1,12 @@
-# Installation
+# Installation - macOS
+
+> **Linux users:** See [README-linux.md](README-linux.md)
 
 ## Prerequisites
 
-- macOS 10.15 or later
+- macOS 10.15+
 - Python 3.10+
-- (Optional) `certifi` for reliable SSL certificate handling:
+- Optional: `certifi` for reliable SSL certificate handling:
   ```bash
   pip3 install certifi
   ```
@@ -33,25 +35,24 @@
 
 ## Install as a launchd service
 
-The included `install.sh` script registers the notifier as a launchd user agent that starts automatically at login and restarts on failure.
+The included `install.sh` script registers the notifier as a background service
+that starts automatically and restarts on failure.
 
 ```bash
 ./install.sh
 ```
 
-This will:
+The script will:
 - Create a LaunchAgent plist at `~/Library/LaunchAgents/com.oref.notifier.plist`
 - Start the service immediately
 - Write logs to `~/Library/Logs/oref-notifier/oref.log`
 
-### Checking status
-
+Checking status:
 ```bash
 launchctl list | grep oref
 ```
 
-### Viewing logs
-
+Viewing logs:
 ```bash
 tail -f ~/Library/Logs/oref-notifier/oref.log
 ```
@@ -62,7 +63,8 @@ tail -f ~/Library/Logs/oref-notifier/oref.log
 ./uninstall.sh
 ```
 
-This stops the service and removes the LaunchAgent plist. Your seen-alerts data in `~/.oref-notifier/` is preserved.
+This stops the service and removes the LaunchAgent plist. Your seen-alerts
+data in `~/.oref-notifier/` is preserved.
 
 To remove everything:
 ```bash

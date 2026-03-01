@@ -1,5 +1,8 @@
 # Israel Homefront MacOS Native Notifier
 
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![Python](https://img.shields.io/badge/Python-3.10+-blue.svg)](https://www.python.org)
+
 A macOS menu-bar-free alert monitor for Israel's Home Front Command (Pikud HaOref).
 Polls the official API and delivers native macOS notifications for rocket alerts, safe-room updates, and other warnings in your configured cities.
 

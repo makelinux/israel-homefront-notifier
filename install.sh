@@ -6,8 +6,9 @@ PLIST_NAME="com.oref.notifier"
 PLIST_PATH="$HOME/Library/LaunchAgents/${PLIST_NAME}.plist"
 LOG_DIR="$HOME/Library/Logs/oref-notifier"
 
-# Create log directory
+# Create required directories
 mkdir -p "$LOG_DIR"
+mkdir -p "$(dirname "$PLIST_PATH")"
 
 # Find python3
 PYTHON="$(command -v python3 || true)"

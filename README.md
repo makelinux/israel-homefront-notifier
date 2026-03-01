@@ -1,16 +1,20 @@
-# Israel Homefront MacOS Native Notifier
+# Israel Homefront Notifier
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Python](https://img.shields.io/badge/Python-3.10+-blue.svg)](https://www.python.org)
 
-A macOS menu-bar-free alert monitor for Israel's Home Front Command (Pikud HaOref).
-Polls the official API and delivers native macOS notifications for rocket alerts, safe-room updates, and other warnings in your configured cities.
+A cross-platform alert monitor for Israel's Home Front Command (Pikud HaOref).
+Polls the official API and delivers native notifications for rocket alerts, safe-room updates, and other warnings in your configured cities.
+
+Supports macOS and Linux.
+
+**Linux users:** See [README-linux.md](README-linux.md) for Linux-specific installation and usage.
 
 ## Features
 
-- Native macOS notifications with sound
+- Native notifications with sound
 - Configurable city list (supports Hebrew names)
-- Runs as a background launchd service
+- Runs as a background service
 - Lightweight -- pure Python, no external dependencies required (optional `certifi` for SSL)
 - First-run seeding to avoid duplicate notifications on startup
 
@@ -23,7 +27,7 @@ cd israel-homefront-macos-notifier
 # Edit the city list
 vi config.json
 
-# Install as a launchd service (starts automatically)
+# Install as a service (starts automatically)
 ./install.sh
 ```
 
@@ -51,7 +55,7 @@ Edit `config.json`:
 
 1. Polls the Pikud HaOref alerts history API every few seconds
 2. Tracks seen alerts in `~/.oref-notifier/seen_alerts.json`
-3. Sends a macOS notification (via `osascript`) for each new alert
+3. Sends a native notification for each new alert
 4. On first run, seeds all existing alerts as "seen" to avoid a notification flood
 
 ## License

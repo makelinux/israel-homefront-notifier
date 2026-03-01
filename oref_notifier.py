@@ -4,6 +4,7 @@
 import json
 import logging
 import os
+import ssl
 import subprocess
 import sys
 import time
@@ -30,6 +31,17 @@ def build_url(cities: list[str], lang: str) -> str:
     return f"{BASE_URL}?{params}"
 
 
+def _ssl_context() -> ssl.SSLContext:
+    """Create an SSL context, using certifi certs if available."""
+    ctx = ssl.create_default_context()
+    try:
+        import certifi
+        ctx.load_verify_locations(certifi.where())
+    except ImportError:
+        pass
+    return ctx
+
+
 def fetch_alerts(cities: list[str], lang: str) -> list[dict]:
     """Fetch alerts from the Oref API. Returns [] on error."""
     url = build_url(cities, lang)
@@ -37,7 +49,7 @@ def fetch_alerts(cities: list[str], lang: str) -> list[dict]:
         req = Request(url)
         req.add_header("Referer", "https://www.oref.org.il/")
         req.add_header("X-Requested-With", "XMLHttpRequest")
-        with urlopen(req, timeout=10) as resp:
+        with urlopen(req, timeout=10, context=_ssl_context()) as resp:
             return json.loads(resp.read().decode("utf-8"))
     except Exception:
         logger.warning("Failed to fetch alerts", exc_info=True)

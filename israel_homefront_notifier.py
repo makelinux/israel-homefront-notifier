@@ -13,7 +13,7 @@ from urllib.request import Request, urlopen
 
 from notifier import send_notification
 
-BASE_URL = "https://alerts-history.oref.org.il//Shared/Ajax/GetAlarmsHistory.aspx"
+BASE_URL = "https://alerts-history.oref.org.il/Shared/Ajax/GetAlarmsHistory.aspx"
 SEEN_ALERTS_PATH = os.path.expanduser("~/.oref-notifier/seen_alerts.json")
 
 logger = logging.getLogger("israel_homefront_notifier")
@@ -24,13 +24,6 @@ def _is_hebrew(text: str) -> bool:
     return any(unicodedata.name(c, "").startswith("HEBREW") for c in text)
 
 
-def reverse_hebrew(text: str) -> str:
-    """Reverse a Hebrew string. Non-Hebrew strings are returned unchanged."""
-    if not text or not _is_hebrew(text):
-        return text
-    return text[::-1]
-
-
 def load_config(path: str) -> dict:
     """Load configuration from a JSON file."""
     with open(path, "r", encoding="utf-8") as f:
@@ -39,9 +32,9 @@ def load_config(path: str) -> dict:
 
 def build_url(cities: list[str], lang: str) -> str:
     """Build the Oref API URL with city query parameters."""
-    params = f"lang={lang}&mode=1"
+    params = f"lang={lang}&mode=0"
     for i, city in enumerate(cities):
-        params += f"&city_{i}={quote(reverse_hebrew(city))}"
+        params += f"&city_{i}={quote(city)}"
     return f"{BASE_URL}?{params}"
 
 
@@ -59,15 +52,23 @@ def _ssl_context() -> ssl.SSLContext:
 def fetch_alerts(cities: list[str], lang: str) -> list[dict]:
     """Fetch alerts from the Oref API. Returns [] on error."""
     url = build_url(cities, lang)
-    try:
-        req = Request(url)
-        req.add_header("Referer", "https://www.oref.org.il/")
-        req.add_header("X-Requested-With", "XMLHttpRequest")
-        with urlopen(req, timeout=10, context=_ssl_context()) as resp:
-            return json.loads(resp.read().decode("utf-8"))
-    except Exception:
-        logger.warning("Failed to fetch alerts", exc_info=True)
-        return []
+    retries = 3
+    for attempt in range(retries):
+        try:
+            #print(url)
+            req = Request(url)
+            req.add_header("Referer", "https://www.oref.org.il/")
+            req.add_header("X-Requested-With", "XMLHttpRequest")
+            with urlopen(req, timeout=10, context=_ssl_context()) as resp:
+                return json.loads(resp.read().decode("utf-8"))
+        except Exception as e:
+            if attempt < retries - 1:
+                logger.debug("Fetch attempt %d/%d failed: %s, retrying in 2s",
+                           attempt + 1, retries, type(e).__name__)
+                time.sleep(2)
+            else:
+                logger.warning("Failed to fetch alerts after %d attempts: %s", retries, type(e).__name__)
+    return []
 
 
 def load_seen_alerts(path: str) -> set[int]:
@@ -97,6 +98,13 @@ def process_alerts(alerts: list[dict], seen: set[int]) -> set[int]:
     for alert in alerts:
         rid = alert["rid"]
         if rid not in seen:
+            #print(alert)
+            cat = alert['category']
+            # Don't bold categories: 5, 6, 13, 14, 16-28
+            no_bold = cat in (5, 6, 13, 14) or 16 <= cat <= 28
+            bold = "" if no_bold else "\033[1m"
+            reset = "" if no_bold else "\033[0m"
+            print(f"{bold}{alert['time']} [{cat}] {alert['category_desc']}{reset}")
             send_notification(alert)
             updated.add(rid)
     return updated
@@ -119,6 +127,9 @@ def main() -> None:
     seen = load_seen_alerts(seen_path)
     first_run = len(seen) == 0
 
+    print(build_url(cities, lang))
+    alerts = fetch_alerts(cities, lang)
+    print(len(alerts))
     if first_run:
         logger.info("First run -- seeding seen alerts")
         alerts = fetch_alerts(cities, lang)

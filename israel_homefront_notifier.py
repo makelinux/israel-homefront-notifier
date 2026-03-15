@@ -8,6 +8,7 @@ import ssl
 import sys
 import time
 import unicodedata
+from datetime import datetime
 from urllib.parse import quote
 from urllib.request import Request, urlopen
 
@@ -104,7 +105,9 @@ def process_alerts(alerts: list[dict], seen: set[int]) -> set[int]:
             no_bold = cat in (5, 6, 13, 14) or 16 <= cat <= 28
             bold = "" if no_bold else "\033[1m"
             reset = "" if no_bold else "\033[0m"
-            print(f"{bold}{alert['time']} [{cat}] {alert['category_desc']}{reset}")
+            # Format alertDate "2026-03-08T19:00:00" to "26-03-08 19:00:00"
+            dt = datetime.fromisoformat(alert['alertDate'].replace('T', ' ')).strftime('%y-%m-%d %H:%M:%S')
+            print(f"{bold}{dt} {cat} {alert['category_desc']}{reset}")
             send_notification(alert)
             updated.add(rid)
     return updated

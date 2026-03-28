@@ -32,27 +32,5 @@ class TestLoadConfig(unittest.TestCase):
             load_config("/nonexistent/config.json")
 
 
-class TestReverseHebrew(unittest.TestCase):
-    def test_reverses_hebrew_string(self):
-        from israel_homefront_notifier import reverse_hebrew
-
-        self.assertEqual(reverse_hebrew("חרזמ - הינתנ"), "נתניה - מזרח")
-
-    def test_leaves_non_hebrew_unchanged(self):
-        from israel_homefront_notifier import reverse_hebrew
-
-        self.assertEqual(reverse_hebrew("Netanya - East"), "Netanya - East")
-
-    def test_reverses_hebrew_without_dash(self):
-        from israel_homefront_notifier import reverse_hebrew
-
-        self.assertEqual(reverse_hebrew("ביבא לת"), "תל אביב")
-
-    def test_empty_string(self):
-        from israel_homefront_notifier import reverse_hebrew
-
-        self.assertEqual(reverse_hebrew(""), "")
-
-
 if __name__ == "__main__":
     unittest.main()

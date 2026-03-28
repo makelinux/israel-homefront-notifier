@@ -7,7 +7,7 @@ import subprocess
 logger = logging.getLogger(__name__)
 
 CATEGORY_TITLES = {
-    1: "\U0001f6a8 ירי רקטות וטילים",
+    1: "\U0001f6a8",
     13: "\u2139\ufe0f עדכון מרחב מוגן",
     14: "\u26a0\ufe0f התרעות צפויות",
 }
@@ -16,7 +16,7 @@ CATEGORY_TITLES = {
 def send_notification(alert: dict) -> None:
     """Send a native notification for an alert (macOS or Linux)."""
     category = alert.get("category")
-    title = CATEGORY_TITLES.get(category, alert.get("category_desc", "התרעה"))
+    title = alert.get("category_desc", "התרעה") + ' ' + CATEGORY_TITLES.get(category, alert.get("category_desc", "התרעה"))
     city = alert.get("NAME_HE", "")
     time_str = alert.get("time", "")[:5]
     body = f"{city} \u2022 {time_str}"

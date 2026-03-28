@@ -58,6 +58,30 @@ Edit `config.json`:
 3. Sends a native notification for each new alert
 4. On first run, seeds all existing alerts as "seen" to avoid a notification flood
 
+## Pushy demo
+
+`pushy_demo.py` demonstrates push notifications using Pushy SDK (alternative to polling).
+
+**Setup:**
+1. Register at [pushy.me](https://dashboard.pushy.me/) to get an app ID
+2. Install SDK: `pip install PushySDK`
+3. Run: `./pushy_demo.py --app-id YOUR_APP_ID --topics test,alerts`
+
+**Usage:**
+```bash
+./pushy_demo.py --app-id abc123 --topics test
+```
+
+Or configure in `pushy_config.json`:
+```json
+{
+  "app_id": "YOUR_PUSHY_APP_ID",
+  "topics": ["test", "alerts"]
+}
+```
+
+Send test via [Pushy dashboard](https://dashboard.pushy.me/) to verify.
+
 ## License
 
 [MIT](LICENSE)

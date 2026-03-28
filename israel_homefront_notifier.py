@@ -15,7 +15,7 @@ from urllib.request import Request, urlopen
 from notifier import send_notification
 
 BASE_URL = "https://alerts-history.oref.org.il/Shared/Ajax/GetAlarmsHistory.aspx"
-SEEN_ALERTS_PATH = os.path.expanduser("~/.oref-notifier/seen_alerts.json")
+STATE_PATH = os.path.expanduser("~/.oref-notifier/state.yaml")
 
 logger = logging.getLogger("israel_homefront_notifier")
 
@@ -72,48 +72,31 @@ def fetch_alerts(cities: list[str], lang: str) -> list[dict]:
     return []
 
 
-def load_seen_alerts(path: str) -> set[int]:
-    """Load seen alert IDs from disk. Returns empty set if file missing."""
+def load_state():
+    """Load state from YAML file. Returns (last_rid, last_event)."""
     try:
-        with open(path, "r") as f:
-            return set(json.load(f))
-    except (FileNotFoundError, json.JSONDecodeError):
-        return set()
+        with open(STATE_PATH) as f:
+            state = {}
+            for line in f:
+                if ':' in line:
+                    k, v = line.split(':', 1)
+                    state[k.strip()] = v.strip()
+            return int(state.get('last_rid', 0)), float(state.get('last_event', 0))
+    except (FileNotFoundError, ValueError):
+        return 0, 0
 
 
-def save_seen_alerts(path: str, seen: set[int]) -> None:
-    """Save seen alert IDs to disk."""
-    os.makedirs(os.path.dirname(path), exist_ok=True)
-    with open(path, "w") as f:
-        json.dump(sorted(seen), f)
-
-
-def seed_seen_alerts(alerts: list[dict]) -> set[int]:
-    """Mark all but the latest alert as seen (first-run behavior)."""
-    if not alerts:
-        return set()
-    latest = max(alerts, key=lambda a: a["alertDate"])
-    t = datetime.fromisoformat(latest["alertDate"].replace('T', ' ')).timestamp()
-    save_last_event_time(t)
-    return {a["rid"] for a in alerts if a["rid"] != latest["rid"]}
-
-
-LAST_EVENT_PATH = os.path.expanduser("~/.oref-notifier/last_event_time")
+def save_state(last_rid, last_event):
+    """Save state to YAML file."""
+    os.makedirs(os.path.dirname(STATE_PATH), exist_ok=True)
+    with open(STATE_PATH, "w") as f:
+        f.write(f"last_rid: {last_rid}\nlast_event: {last_event}\n")
 
 
 def elapsed_str(last_event):
     """Format elapsed time since last event as HH:MM:SS."""
     e = int(time.time() - last_event)
     return f"{e // 3600:02d}:{e % 3600 // 60:02d}:{e % 60:02d}"
-
-
-def load_last_event_time():
-    """Load last event timestamp from disk. Returns None if not found."""
-    try:
-        with open(LAST_EVENT_PATH) as f:
-            return float(f.read().strip())
-    except (FileNotFoundError, ValueError):
-        return None
 
 
 def last_event_from_alerts(alerts):
@@ -124,31 +107,25 @@ def last_event_from_alerts(alerts):
     return datetime.fromisoformat(latest.replace('T', ' ')).timestamp()
 
 
-def save_last_event_time(t):
-    """Save last event timestamp to disk."""
-    os.makedirs(os.path.dirname(LAST_EVENT_PATH), exist_ok=True)
-    with open(LAST_EVENT_PATH, "w") as f:
-        f.write(str(t))
-
-
-def process_alerts(alerts: list[dict], seen: set[int], last_event: float) -> tuple[set[int], float]:
-    """Check for new alerts, send notifications, return updated seen set and last event time."""
-    updated = set(seen)
+def process_alerts(alerts, last_rid, last_event):
+    """Check for new alerts, send notifications. Returns (last_rid, last_event)."""
     for alert in alerts:
         rid = alert["rid"]
-        if rid not in seen:
+        if rid > last_rid:
             cat = alert['category']
-            # Don't bold categories: 5, 6, 13, 14, 16-28
             no_bold = cat in (5, 6, 13, 14) or 16 <= cat <= 28
             bold = "" if no_bold else "\033[1m"
             reset = "" if no_bold else "\033[0m"
-            dt = datetime.fromisoformat(alert['alertDate'].replace('T', ' ')).strftime('%y-%m-%d %H:%M:%S')
-            print(f"\r{bold}{dt} {cat} {alert['category_desc']}{reset}")
-            last_event = time.time()
-            save_last_event_time(last_event)
+            dt = datetime.fromisoformat(alert['alertDate'].replace('T', ' '))
+            print(f"\r{bold}{dt.strftime('%y-%m-%d %H:%M:%S')} {cat} {alert['category_desc']}{reset}")
+            t = dt.timestamp()
+            if t > last_event:
+                last_event = t
+            if rid > last_rid:
+                last_rid = rid
             send_notification(alert)
-            updated.add(rid)
-    return updated, last_event
+    save_state(last_rid, last_event)
+    return last_rid, last_event
 
 
 def main() -> None:
@@ -158,32 +135,23 @@ def main() -> None:
     cities = config["cities"]
     lang = config.get("lang", "he")
     interval = config.get("poll_interval_seconds", 5)
-    seen_path = os.path.expanduser("~/.oref-notifier/seen_alerts.json")
 
     logging.basicConfig(
         level=logging.INFO,
         format="%(asctime)s %(levelname)s %(message)s",
     )
 
-    seen = load_seen_alerts(seen_path)
-    first_run = len(seen) == 0
+    last_rid, last_event = load_state()
 
-    print(build_url(cities, lang))
     alerts = fetch_alerts(cities, lang)
-    print(len(alerts))
-    if first_run:
-        logger.info("First run -- seeding seen alerts")
-        alerts = fetch_alerts(cities, lang)
-        seen = seed_seen_alerts(alerts)
-        save_seen_alerts(seen_path, seen)
-        logger.info("Seeded %d alerts", len(seen))
+    if alerts:
+        last_event = last_event_from_alerts(alerts)
+        if not last_rid:
+            last_rid = max(a["rid"] for a in alerts)
+        save_state(last_rid, last_event)
 
     logger.info("Polling every %ds for cities: %s", interval, ", ".join(cities))
 
-    last_event = load_last_event_time()
-    if last_event is None:
-        last_event = last_event_from_alerts(alerts)
-        save_last_event_time(last_event)
     last_poll = 0
     while True:
         now = time.monotonic()
@@ -191,8 +159,7 @@ def main() -> None:
             last_poll = now
             alerts = fetch_alerts(cities, lang)
             if alerts:
-                seen, last_event = process_alerts(alerts, seen, last_event)
-                save_seen_alerts(seen_path, seen)
+                last_rid, last_event = process_alerts(alerts, last_rid, last_event)
         print(f"\r{elapsed_str(last_event)}", end='', flush=True)
         time.sleep(1)
 
